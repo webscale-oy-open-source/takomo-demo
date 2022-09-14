@@ -34,6 +34,10 @@ aws_access_key_id=XXXXXXX
 aws_secret_access_key=YYYYYY
 ```
 
+## Create deploy role
+
+Create an IAM role with name "Admin" and add admin permissions for it. This role is used to deploy stacks to yout test AWS account.
+
 ## Configure Test account id
 
 Modify `my-variables.yml` file and set there id of your test AWS account.
