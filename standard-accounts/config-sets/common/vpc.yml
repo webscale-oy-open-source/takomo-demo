@@ -1,0 +1,14 @@
+template: vpc.yml
+name: {{target.name}}-vpc
+parameters:
+  AccountName:
+    value: {{target.name}}
+    immutable: true
+  VpcCidr:
+    value: {{var.vpc.cidr}}
+    immutable: true
+  TransitGatewayId:
+    resolver: external-stack-output
+    stack: tgw
+    output: TgwId
+    immutable: true

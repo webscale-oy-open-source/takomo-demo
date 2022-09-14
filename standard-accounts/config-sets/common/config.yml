@@ -1,0 +1,4 @@
+regions: {{var.region}}
+tags:
+  environment: {{var.environment}}
+

@@ -1,0 +1,163 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: VPC
+
+Parameters:
+
+  AccountName:
+    Type: String
+
+  VpcCidr:
+    Type: String
+    Description: VPC CIDR
+    AllowedPattern: ^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(21|22)$
+    ConstraintDescription: Must be CIDR block with /21 or /22 mask bits
+
+  TransitGatewayId:
+    Type: String
+    Description: Id of TGW where to attach the VPC
+
+Resources:
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref AccountName
+
+  #
+  # Subnets
+  #
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !Select [ 0, !Cidr [ !Ref VpcCidr, 4, 8 ]]
+      MapPublicIpOnLaunch: false
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !Select [ 1, !Cidr [ !Ref VpcCidr, 4, 8 ]]
+      MapPublicIpOnLaunch: false
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: !Select [ 2, !Cidr [ !Ref VpcCidr, 4, 8 ]]
+      MapPublicIpOnLaunch: true
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: !Select [ 3, !Cidr [ !Ref VpcCidr, 4, 8 ]]
+      MapPublicIpOnLaunch: true
+
+  #
+  # Route tables
+  #
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateSubnetRouteTableAssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetRouteTableAssociationB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetB
+      RouteTableId: !Ref PrivateRouteTable
+
+  PublicSubnetRouteTableAssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetRouteTableAssociationB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
+
+  #
+  # Routes
+  #
+  TgwRoute:
+    Type: AWS::EC2::Route
+    DependsOn: TransitGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      TransitGatewayId: !Ref TransitGatewayId
+
+  InternetRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  #
+  # Internet
+  #
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  #
+  # NAT Gateway
+  #
+
+  EipShared:
+    Type: AWS::EC2::EIP
+
+  NatGwShared:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EipShared.AllocationId
+      SubnetId: !Ref PublicSubnetA
+
+  #
+  # TGW
+  #
+
+  TransitGatewayAttachment:
+    Type: AWS::EC2::TransitGatewayAttachment
+    DependsOn:
+      - VPC
+      - PrivateSubnetA
+      - PrivateSubnetB
+    Properties:
+      TransitGatewayId: !Ref TransitGatewayId
+      VpcId: !Ref VPC
+      SubnetIds:
+        - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB

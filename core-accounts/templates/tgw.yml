@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: TGW
+
+Resources:
+
+  Tgw:
+    Type: AWS::EC2::TransitGateway
+    Properties:
+      AmazonSideAsn: 65000
+      Description: Test TGW
+      AutoAcceptSharedAttachments: enable
+      DefaultRouteTableAssociation: enable
+      DnsSupport: enable
+
+Outputs:
+  TgwId:
+    Description: TGW id
+    Value: !Ref Tgw

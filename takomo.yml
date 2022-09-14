@@ -1,0 +1,3 @@
+requiredVersion: '4.6.1'
+varFiles:
+  - my-variables.yml

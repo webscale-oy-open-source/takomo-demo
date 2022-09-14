@@ -1,0 +1,8 @@
+extends: ../takomo.yml
+
+deploymentTargets:
+  repository:
+    type: filesystem
+    dir: accounts
+    inferDeploymentGroupPathFromDirName: true
+    inferDeploymentTargetNameFromFileName: true

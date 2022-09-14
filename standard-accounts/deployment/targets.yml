@@ -1,0 +1,37 @@
+#
+# Default variables that can be overridden in account-specific configurations.
+#
+vars:
+
+  #
+  # Account primary region
+  #
+  region: eu-north-1
+
+  #
+  # VPC configuration
+  #
+  vpc:
+    cidr: ''
+    tgwId: ''
+
+# Name of IAM role used to deploy infrastructure to targets
+deploymentRoleName: Admin
+
+deploymentGroups:
+
+  Sandbox:
+    configSets: common
+    vars:
+      environment: sandbox
+  Workload:
+    configSets: common
+  Workload/Dev:
+    vars:
+      environment: dev
+  Workload/Test:
+    vars:
+      environment: test
+  Workload/Prod:
+    vars:
+      environment: prod
