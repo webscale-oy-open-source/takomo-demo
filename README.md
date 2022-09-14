@@ -106,5 +106,5 @@ Deploy targets in a specific deployment group:
 npx tkm targets deploy Workload/Test --profile takomo 
 ```
 
-More options ava is explained in documentation https://takomo.io/targets/intro
+More options ava is explained in documentation https://takomo.io/targets/category/command-line-usage
 
